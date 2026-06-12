@@ -559,16 +559,34 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&!document.getElementById('splash').classList.contains('hide'))enterSite();
 });
 
-function commander(){
-  const v=document.getElementById('vendeur').value.trim();
-  const a=document.getElementById('article').value.trim();
-  const p=parseInt(document.getElementById('prix').value);
-  const err=document.getElementById('erreur');
-  if(!v||!a||!p||p<=0){err.classList.add('show');return;}
+<script>
+function commander() {
+  const v = document.getElementById('vendeur').value.trim();
+  const a = document.getElementById('article').value.trim();
+  const p = parseInt(document.getElementById('prix').value);
+
+  const err = document.getElementById('erreur');
+
+  if (!v || !a || !p || p <= 0) {
+    err.classList.add('show');
+    return;
+  }
+
   err.classList.remove('show');
-  const base=atob('aHR0cHM6Ly9wYXkud2F2ZS5jb20vbS9NX2NpX2VkY1lGc09NaWpyai9jL2NpLw==');
-  window.location.href=base+'?amount='+p;
+
+  const numero = '2250104845370';
+
+  const message = encodeURIComponent(
+`🛒 NOUVELLE COMMANDE
+
+👤 Vendeur : ${v}
+📦 Article : ${a}
+💰 Prix : ${p} FCFA`
+  );
+
+  window.open(
+    `https://wa.me/${numero}?text=${message}`,
+    '_blank'
+  );
 }
 </script>
-</body>
-</html>
